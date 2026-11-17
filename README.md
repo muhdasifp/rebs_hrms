@@ -1,5 +1,5 @@
 Steps
-1. Download or cline https://github.com/muhdasifp/rebs_hrms/
+1. Download or cline https://github.com/muhdasifp/rebs_hrms.git
 
 # FOR RUNNING FLUTTER APP
 `cd hrms_test`
