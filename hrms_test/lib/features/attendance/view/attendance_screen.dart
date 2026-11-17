@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_test/core/theme/app_colors.dart';
+import 'package:hrms_test/data/services/location_service.dart';
 import 'package:hrms_test/features/attendance/providers/attendance_provider.dart';
 import 'package:hrms_test/features/dashboard/provider/dashboard_provider.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ class AttendanceScreen extends ConsumerStatefulWidget {
 class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   bool _isProcessing = false;
   bool _isSyncing = false;
+  final LocationService _locationService = LocationService();
 
   Future<void> _onAction(String type) async {
     if (_isProcessing) return;
@@ -32,10 +34,114 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showError(e.toString().replaceFirst('Exception: ', ''));
+      await _handleAttendanceException(e, type);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Future<void> _handleAttendanceException(Object error, String type) async {
+    String title = 'Attendance Failed';
+    String message = error.toString().replaceFirst('Exception: ', '');
+    String? actionText;
+    VoidCallback? onAction;
+
+    if (error is LocationServiceDisabledException) {
+      title = 'GPS Disabled';
+      message =
+          'Your device location is turned off. '
+          'Please enable GPS to mark attendance.';
+
+      actionText = 'Open Location Settings';
+
+      onAction = () async {
+        Navigator.pop(context);
+        await _locationService.openLocationSettings();
+      };
+    } else if (error is LocationPermissionDeniedException) {
+      title = 'Location Permission Required';
+      message =
+          'Location permission is required to mark attendance. '
+          'Please allow location access.';
+
+      actionText = 'Try Again';
+
+      onAction = () {
+        Navigator.pop(context);
+        _onAction(type);
+      };
+    } else if (error is LocationPermissionPermanentlyDeniedException) {
+      title = 'Permission Permanently Denied';
+      message =
+          'Location permission has been permanently denied. '
+          'Please enable it from app settings.';
+
+      actionText = 'Open App Settings';
+
+      onAction = () async {
+        Navigator.pop(context);
+        await _locationService.openAppSettings();
+      };
+    } else if (error is LocationPermissionUnavailableException) {
+      title = 'Location Permission Unavailable';
+      message =
+          'Unable to determine location permission status. '
+          'Please check your device settings.';
+    } else if (error is LocationTimeoutException) {
+      title = 'Location Timeout';
+      message =
+          'Unable to get your current location. '
+          'Please check your GPS and try again.';
+
+      actionText = 'Retry';
+
+      onAction = () {
+        Navigator.pop(context);
+        _onAction(type);
+      };
+    } else if (error is LocationFetchException) {
+      title = 'Location Error';
+      message = error.toString();
+    }
+
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.text,
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: AppColors.text2, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.text3),
+            ),
+          ),
+          if (actionText != null)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: onAction == null ? null : () => onAction!(),
+              child: Text(actionText),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _onSync() async {

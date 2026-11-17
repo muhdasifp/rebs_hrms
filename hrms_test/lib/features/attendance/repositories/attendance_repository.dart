@@ -12,6 +12,10 @@ class AttendanceRepository {
   AttendanceRepository(this.api, this.db, this.location);
 
   Future<void> record(String type, EmployeeModel employee) async {
+    if (type != 'check_in' && type != 'check_out') {
+      throw Exception('Invalid attendance event.');
+    }
+
     final position = await location.currentPosition();
     final distance = location.distance(
       position.latitude,

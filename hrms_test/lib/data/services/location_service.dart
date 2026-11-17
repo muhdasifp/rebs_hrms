@@ -1,59 +1,71 @@
-import 'package:geolocator/geolocator.dart';
+import 'dart:async';
+
+import 'package:geolocator/geolocator.dart' as geo;
 
 class LocationService {
-  Future<Position> currentPosition() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  Future<geo.Position> currentPosition() async {
+    final serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
       throw LocationServiceDisabledException();
     }
 
-    var permission = await Geolocator.checkPermission();
+    var permission = await geo.Geolocator.checkPermission();
 
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+    if (permission == geo.LocationPermission.denied) {
+      permission = await geo.Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.denied) {
+    if (permission == geo.LocationPermission.denied) {
       throw LocationPermissionDeniedException();
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission == geo.LocationPermission.deniedForever) {
       throw LocationPermissionPermanentlyDeniedException();
     }
 
-    if (permission == LocationPermission.unableToDetermine) {
+    if (permission == geo.LocationPermission.unableToDetermine) {
       throw LocationPermissionUnavailableException();
     }
 
-    return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 20),
-      ),
-    );
+    try {
+      return await geo.Geolocator.getCurrentPosition(
+        locationSettings: const geo.LocationSettings(
+          accuracy: geo.LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+    } on TimeoutException {
+      throw LocationTimeoutException();
+    } on geo.LocationServiceDisabledException {
+      throw LocationServiceDisabledException();
+    } catch (e) {
+      throw LocationFetchException(e.toString());
+    }
   }
 
   Future<bool> openAppSettings() {
-    return Geolocator.openAppSettings();
+    return geo.Geolocator.openAppSettings();
   }
 
   Future<bool> openLocationSettings() {
-    return Geolocator.openLocationSettings();
+    return geo.Geolocator.openLocationSettings();
   }
 
   Future<bool> isLocationEnabled() {
-    return Geolocator.isLocationServiceEnabled();
+    return geo.Geolocator.isLocationServiceEnabled();
   }
 
-  Future<LocationPermission> checkPermission() {
-    return Geolocator.checkPermission();
+  Future<geo.LocationPermission> checkPermission() {
+    return geo.Geolocator.checkPermission();
   }
 
   double distance(double lat, double lng, double officeLat, double officeLng) {
-    return Geolocator.distanceBetween(lat, lng, officeLat, officeLng);
+    return geo.Geolocator.distanceBetween(lat, lng, officeLat, officeLng);
   }
 }
+
+// Custom exceptions
 
 class LocationServiceDisabledException implements Exception {
   @override
@@ -73,4 +85,18 @@ class LocationPermissionPermanentlyDeniedException implements Exception {
 class LocationPermissionUnavailableException implements Exception {
   @override
   String toString() => 'Location permission is unavailable.';
+}
+
+class LocationTimeoutException implements Exception {
+  @override
+  String toString() => 'Unable to get location. Please try again.';
+}
+
+class LocationFetchException implements Exception {
+  final String message;
+
+  LocationFetchException(this.message);
+
+  @override
+  String toString() => 'Unable to fetch location: $message';
 }
