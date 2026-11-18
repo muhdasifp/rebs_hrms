@@ -277,10 +277,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           final checkedOut = hasCheckOut;
 
           final checkInTime = hasCheckIn
-              ? DateTime.parse(checkInEvt!['timestamp'] as String)
+              ? DateTime.parse(checkInEvt['timestamp'] as String)
               : null;
           final checkOutTime = hasCheckOut
-              ? DateTime.parse(checkOutEvt!['timestamp'] as String)
+              ? DateTime.parse(checkOutEvt['timestamp'] as String)
               : null;
 
           final String statusLabel;

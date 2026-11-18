@@ -1,39 +1,38 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
-import 'package:hrms_test/core/network/api_client.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hrms_test/core/storage/local_database.dart';
-import 'package:hrms_test/data/services/connectivity_service.dart';
 
 class LeaveRepository {
-  final ApiClient api;
+  final FirebaseFirestore firestore;
   final LocalDatabase db;
-  final ConnectivityService connectivity;
 
-  LeaveRepository(this.api, this.db, this.connectivity);
+  LeaveRepository(this.firestore, this.db);
 
   Future<List<Map<String, dynamic>>> requests() async {
     try {
-      final online = await connectivity.isOnline;
-      if (online) {
-        final items = List<Map<String, dynamic>>.from(
-          (await api.get('/leave/requests'))['data'],
-        );
-        await db.cache('leave_requests', jsonEncode(items));
-        return items;
-      } else {
-        return _fromLocal();
-      }
-    } on DioException {
-      return _fromLocal();
+      final snapshot = await firestore
+          .collection('leave_requests')
+          .orderBy('created_at', descending: true)
+          .get();
+      final items = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        final createdAt = data['created_at'];
+        if (createdAt is Timestamp) {
+          data['created_at'] = createdAt.toDate().toIso8601String();
+        } else if (createdAt != null) {
+          data['created_at'] = createdAt.toString();
+        }
+        return {...data, 'request_id': doc.id};
+      }).toList();
+      await db.cache('leave_requests', jsonEncode(items));
+      return items;
+    } catch (_) {
+      final cached = await db.readCache('leave_requests');
+      return cached == null
+          ? []
+          : List<Map<String, dynamic>>.from(jsonDecode(cached));
     }
-  }
-
-  Future<List<Map<String, dynamic>>> _fromLocal() async {
-    final cached = await db.readCache('leave_requests');
-    return cached != null
-        ? List<Map<String, dynamic>>.from(jsonDecode(cached))
-        : [];
   }
 
   Future<void> submit({
@@ -84,34 +83,14 @@ class LeaveRepository {
     );
     if (overlap) throw Exception('Leave dates overlap an existing request.');
 
-    if (!await connectivity.isOnline) {
-      throw Exception(
-        'Leave submission requires an internet connection.',
-      );
-    }
-
-    try {
-      await api.post('/leave/requests', {
-        'type': type,
-        'start_date': from,
-        'end_date': to,
-        'reason': reason.trim(),
-      });
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      if (e.response?.statusCode == 422 && data != null) {
-        final msg = data['message']?.toString() ?? 'Validation failed';
-        final errors = data['errors'] as Map<String, dynamic>?;
-        if (errors != null && errors.isNotEmpty) {
-          final detail = errors.values.first;
-          final errMsg = detail is List
-              ? detail.first.toString()
-              : detail.toString();
-          throw Exception('$msg: $errMsg');
-        }
-        throw Exception(msg);
-      }
-      rethrow;
-    }
+    await firestore.collection('leave_requests').add({
+      'type': type,
+      'start_date': from,
+      'end_date': to,
+      'reason': reason.trim(),
+      'days': days,
+      'status': 'pending',
+      'created_at': FieldValue.serverTimestamp(),
+    });
   }
 }

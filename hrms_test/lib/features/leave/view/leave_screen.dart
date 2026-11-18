@@ -56,7 +56,10 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           unselectedLabelColor: AppColors.text3,
           indicatorColor: AppColors.accent,
           indicatorWeight: 2,
-          tabs: const [Tab(text: 'My Requests'), Tab(text: 'Apply')],
+          tabs: const [
+            Tab(text: 'My Requests'),
+            Tab(text: 'Apply'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -130,7 +133,7 @@ class _RequestsTab extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
           itemCount: requests.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (_, i) => _RequestCard(requests[i]),
         );
       },
@@ -247,10 +250,7 @@ class _RequestCard extends StatelessWidget {
               const Spacer(),
               Text(
                 '$days day${days > 1 ? 's' : ''}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.text2,
-                ),
+                style: const TextStyle(fontSize: 12, color: AppColors.text2),
               ),
             ],
           ),
@@ -261,10 +261,7 @@ class _RequestCard extends StatelessWidget {
               req['reason'] as String,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.text2,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.text2),
             ),
           ],
         ],
@@ -297,8 +294,9 @@ class _ApplyTabState extends ConsumerState<_ApplyTab> {
 
   Future<void> _pickDate({required bool isStart}) async {
     final now = DateTime.now();
-    final initial =
-        isStart ? (_startDate ?? now) : (_endDate ?? _startDate ?? now);
+    final initial = isStart
+        ? (_startDate ?? now)
+        : (_endDate ?? _startDate ?? now);
     final first = initial.isBefore(now) ? now : initial;
     final picked = await showDatePicker(
       context: context,
@@ -348,7 +346,9 @@ class _ApplyTabState extends ConsumerState<_ApplyTab> {
       _error = null;
     });
     try {
-      await ref.read(leaveActionsProvider).submit(
+      await ref
+          .read(leaveActionsProvider)
+          .submit(
             type: _type,
             start: _startDate!,
             end: _endDate!,
@@ -386,10 +386,9 @@ class _ApplyTabState extends ConsumerState<_ApplyTab> {
 
   @override
   Widget build(BuildContext context) {
-    final days =
-        (_startDate != null && _endDate != null)
-            ? _endDate!.difference(_startDate!).inDays + 1
-            : null;
+    final days = (_startDate != null && _endDate != null)
+        ? _endDate!.difference(_startDate!).inDays + 1
+        : null;
 
     return Column(
       children: [

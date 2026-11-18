@@ -136,10 +136,7 @@ class _HistoryRow extends StatelessWidget {
                   checkIn != null
                       ? '${_fmt(checkIn)} — ${_fmt(checkOut)}'
                       : 'No record',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.text3,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: AppColors.text3),
                 ),
               ],
             ),
@@ -176,17 +173,15 @@ class _HistoryRow extends StatelessWidget {
 class _Badge extends StatelessWidget {
   final String label;
   final Color color, soft;
-  const _Badge({
-    required this.label,
-    required this.color,
-    required this.soft,
-  });
+  const _Badge({required this.label, required this.color, required this.soft});
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration:
-          BoxDecoration(color: soft, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: soft,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

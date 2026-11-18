@@ -68,8 +68,7 @@ class TodayCard extends ConsumerWidget {
         final checkOutTime = checkOutEvt != null
             ? DateTime.parse(checkOutEvt['timestamp'] as String)
             : null;
-        final isPending =
-            (checkInEvt?['sync_status'] as String?) == 'pending';
+        final isPending = (checkInEvt?['sync_status'] as String?) == 'pending';
 
         return _CardShell(
           child: Padding(
@@ -159,11 +158,7 @@ class _CardShell extends StatelessWidget {
 class _Metric extends StatelessWidget {
   final String label, value;
   final IconData icon;
-  const _Metric({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+  const _Metric({required this.label, required this.value, required this.icon});
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -207,17 +202,15 @@ class _Metric extends StatelessWidget {
 class _Badge extends StatelessWidget {
   final String label;
   final Color color, soft;
-  const _Badge({
-    required this.label,
-    required this.color,
-    required this.soft,
-  });
+  const _Badge({required this.label, required this.color, required this.soft});
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration:
-          BoxDecoration(color: soft, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: soft,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

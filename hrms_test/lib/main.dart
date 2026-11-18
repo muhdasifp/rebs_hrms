@@ -1,19 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_test/core/theme/app_theme.dart';
-import 'package:hrms_test/data/const/app_constant.dart';
-import 'package:hrms_test/features/root/view/root_screen.dart';
-import 'package:hrms_test/features/setup/base_url_screen.dart';
+import 'package:hrms_test/features/root/view/splash_screen.dart';
+import 'package:hrms_test/firebase_options.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final configured = await AppConstant.isConfigured();
-  runApp(ProviderScope(child: MyApp(configured: configured)));
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  final bool configured;
-  const MyApp({super.key, this.configured = false});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'REBS HRMS',
       theme: AppTheme.appTheme,
-      home: configured ? const RootScreen() : const BaseUrlScreen(),
+      home: const SplashScreen(),
     );
   }
 }

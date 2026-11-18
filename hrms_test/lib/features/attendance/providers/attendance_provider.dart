@@ -5,7 +5,7 @@ import 'package:hrms_test/features/dashboard/provider/dashboard_provider.dart';
 
 final attendanceRepositoryProvider = Provider(
   (ref) => AttendanceRepository(
-    ref.read(apiProvider),
+    ref.read(firestoreProvider),
     ref.read(databaseProvider),
     ref.read(locationProvider),
   ),

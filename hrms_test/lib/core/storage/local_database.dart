@@ -131,15 +131,11 @@ class LocalDatabase {
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
     if ((event['sync_status'] as String?) == 'pending') {
-      await db.insert(
-        'pending_sync',
-        {
-          'table_name': 'attendance_events',
-          'record_id': event['event_id'],
-          'created_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      await db.insert('pending_sync', {
+        'table_name': 'attendance_events',
+        'record_id': event['event_id'],
+        'created_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -152,20 +148,12 @@ class LocalDatabase {
     );
   }
 
-  Future<void> updateEvent(
-    String id,
-    String status, [
-    String? message,
-  ]) async {
+  Future<void> updateEvent(String id, String status, [String? message]) async {
     final db = await database;
     final isSynced = status == 'synced' ? 1 : 0;
     await db.update(
       'attendance_events',
-      {
-        'sync_status': status,
-        'is_synced': isSynced,
-        'error_message': message,
-      },
+      {'sync_status': status, 'is_synced': isSynced, 'error_message': message},
       where: 'event_id = ?',
       whereArgs: [id],
     );
@@ -208,23 +196,16 @@ class LocalDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     if ((req['is_synced'] as int?) == 0) {
-      await db.insert(
-        'pending_sync',
-        {
-          'table_name': 'leave_requests',
-          'record_id': req['request_id'],
-          'created_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      await db.insert('pending_sync', {
+        'table_name': 'leave_requests',
+        'record_id': req['request_id'],
+        'created_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
   Future<List<Map<String, dynamic>>> getLeaveRequests() async {
-    return (await database).query(
-      'leave_requests',
-      orderBy: 'created_at DESC',
-    );
+    return (await database).query('leave_requests', orderBy: 'created_at DESC');
   }
 
   Future<void> updateLeaveRequest(

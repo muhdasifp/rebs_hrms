@@ -66,10 +66,7 @@ class LeaveCard extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Casual: ${b['casual']}  ·  Sick: ${b['sick']}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.text3,
-                  ),
+                  style: const TextStyle(fontSize: 11, color: AppColors.text3),
                 ),
               ],
             ),

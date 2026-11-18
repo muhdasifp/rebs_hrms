@@ -4,8 +4,10 @@ import 'package:hrms_test/features/dashboard/model/employee_model.dart';
 import 'package:hrms_test/features/dashboard/repository/dashboard_repository.dart';
 
 final dashboardRepositoryProvider = Provider(
-  (ref) =>
-      DashboardRepository(ref.read(apiProvider), ref.read(databaseProvider)),
+  (ref) => DashboardRepository(
+    ref.read(firestoreProvider),
+    ref.read(databaseProvider),
+  ),
 );
 final employeeProvider = FutureProvider<EmployeeModel>(
   (ref) => ref.read(dashboardRepositoryProvider).employee(),

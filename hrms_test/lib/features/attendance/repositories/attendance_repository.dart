@@ -1,15 +1,15 @@
-import 'package:dio/dio.dart';
-import 'package:hrms_test/core/network/api_client.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hrms_test/core/storage/local_database.dart';
 import 'package:hrms_test/data/services/location_service.dart';
 import 'package:hrms_test/features/dashboard/model/employee_model.dart';
 import 'package:uuid/uuid.dart';
 
 class AttendanceRepository {
-  final ApiClient api;
+  final FirebaseFirestore firestore;
   final LocalDatabase db;
   final LocationService location;
-  AttendanceRepository(this.api, this.db, this.location);
+
+  AttendanceRepository(this.firestore, this.db, this.location);
 
   Future<void> record(String type, EmployeeModel employee) async {
     if (type != 'check_in' && type != 'check_out') {
@@ -61,7 +61,7 @@ class AttendanceRepository {
     for (final event in pending) {
       final id = event['event_id'] as String;
       try {
-        await api.post('/attendance/events', {
+        await firestore.collection('attendance_events').doc(id).set({
           'event_id': id,
           'type': event['type'],
           'timestamp': event['timestamp'],
@@ -69,17 +69,12 @@ class AttendanceRepository {
           'longitude': event['longitude'],
         });
         await db.updateEvent(id, 'synced');
-      } on DioException catch (e) {
-        final code = e.response?.statusCode;
-        if (code != null && code >= 400 && code < 500) {
-          await db.updateEvent(
-            id,
-            'rejected',
-            e.response?.data?['message']?.toString() ?? 'Rejected by server',
-          );
-        } else {
-          break;
-        }
+      } on FirebaseException catch (e) {
+        await db.updateEvent(
+          id,
+          'rejected',
+          e.message ?? 'Rejected by Firebase',
+        );
       } catch (_) {
         break;
       }
